@@ -70,7 +70,7 @@ cd /home/pgrouting/mydataset
 time osm2pgrouting -file "whatever-latest.osm" -conf "/usr/share/osm2pgrouting/mapconfig.xml" -dbname cartodb_user_..._db -user postgres -host localhost -prefixtables "routing_sp_" -clean
 ```
 
-**CHEAT:** If the command exits with a "killed" message, may be due to a OOM error. Typical onpremise instance has no swap file, so we should follow https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04 to avoid this kind of error creating a swapfile ~2x the size of installed RAM
+**CHEAT:** If the command exits with a "killed" message, may be due to a OOM error. Typical onpremise instance has no swap file, so we should follow [this method](https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04) to avoid this kind of error creating a swapfile ~2x the size of installed RAM
 
 **NOTE:** We have used "routing_sp_" as pgRouting tables prefix (in order to have pgRouting related tables tagged), but this is optional
 
