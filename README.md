@@ -1,2 +1,7 @@
-# labs-routing
-Testing of different methods of routing 
+# Routing tests
+
+Techs being tested:
+
+* **pgRouting** (currently testing)
+* **OSRM** (upcoming)
+* **Routino**
