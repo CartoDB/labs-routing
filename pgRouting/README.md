@@ -69,6 +69,12 @@ sudo apt-get install osm2pgrouting
 cd /home/pgrouting/mydataset
 time osm2pgrouting -file "whatever-latest.osm" -conf "/usr/share/osm2pgrouting/mapconfig.xml" -dbname cartodb_user_..._db -user postgres -host localhost -prefixtables "routing_sp_" -clean
 ```
+**NOTE:** Looks like the topology sanitization of OSM2pgRouting is not as good as expected. If you use your own function to cal pgr_dijkstra(), then add this to your query (like pgr_p2p.sql:59)
+
+```sql
+... AND length != 0 AND the_geom IS NOT NULL ...
+```
+
 
 **CHEAT:** If the command exits with a "killed" message, may be due to a OOM error. Typical onpremise instance has no swap file, so we should follow https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-ubuntu-14-04 to avoid this kind of error creating a swapfile ~2x the size of installed RAM
 
@@ -113,7 +119,7 @@ SELECT sum(length) as distance, sum(cost) as duration FROM pgr_p2p('routing_sp_w
 
 ## Parallelizing queries
 
-Due to [this](https://wiki.postgresql.org/wiki/FAQ#How_does_PostgreSQL_use_CPU_resources.3F) a PostgreSQL query runs in a single CPU, no matter how many cores has your data blender machine. Our target was to saturate each core to be as fast as possible. Using [parsel](http://geeohspatial.blogspot.com.es/2013/12/a-simple-function-for-parallel-queries_18.html) (but [this fork](https://gist.github.com/minus34/53570f5f274c30bc44e3) instead) we have managed to lower the processing time from 100h to 45h (ING testcase).
+Due to [this](https://wiki.postgresql.org/wiki/FAQ#How_does_PostgreSQL_use_CPU_resources.3F) a PostgreSQL query runs in a single CPU, no matter how many cores has your data blender machine. Our target was to saturate each core to be as fast as possible. Using [parsel](http://geeohspatial.blogspot.com.es/2013/12/a-simple-function-for-parallel-queries_18.html) (but [this fork](https://gist.github.com/minus34/53570f5f274c30bc44e3) instead) we have managed to lower the processing time from 100h to 45h in 1st try and 26h in 2nd try (ING testcase).
 
 **parsel()** requires **dblink** extension.
 

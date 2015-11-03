@@ -23,7 +23,7 @@ BEGIN
 	EXECUTE sql INTO g2;
 	p1 := 'ST_X(''' || g1::text || '''), ST_Y(''' || g1::text || ''')';
 	p2 := 'ST_X(''' || g2::text || '''), ST_Y(''' || g2::text || ''')';
-	RETURN QUERY EXECUTE 'SELECT SUM(cost) as scost, SUM(length*1000) as pgdist FROM pgr_p2p(''routing_sp_ways'',' || p1 || ',' || p2 || ',''' || car || ''',''' || fastest || ''')';
+	RETURN QUERY EXECUTE 'SELECT SUM(cost) as scost, SUM(length) as pgdist FROM pgr_p2p(''routing_sp_ways'',' || p1 || ',' || p2 || ',''' || car || ''',''' || fastest || ''')';
 END;
 $BODY$
 language 'plpgsql';
@@ -77,7 +77,7 @@ BEGIN
 		sql1 := 'SELECT * FROM ing_neighbors(''' || rec0.num_atm || ''',''' || input_table || ''')';
 		FOR rec1 IN EXECUTE sql1
 		LOOP
-			EXECUTE 'SELECT scost, pgdist FROM ing_pgrdist('''
+			EXECUTE 'SELECT (scost*60) AS min, pgdist FROM ing_pgrdist('''
 				|| rec0.num_atm || ''','''
 				|| rec1.PATM || ''','''
 				|| input_table || ''','''
@@ -87,7 +87,7 @@ BEGIN
 			id2 := rec1.PATM::text;
 			dist := rec1.dist::integer;
 			pgdist := rec2.pgdist::integer;
-			t := rec2.scost::integer;
+			t := rec2.min::integer;
 			RETURN NEXT;
 		END LOOP;
 		RETURN NEXT;

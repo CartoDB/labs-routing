@@ -52,8 +52,11 @@ BEGIN
 	END IF;
 	sql0 :=  'SELECT gid, the_geom, name, cost, source, target, ST_Reverse(the_geom) AS flip_geom, '
 		|| mylength || ' AS mylength FROM '
-		|| 'pgr_dijkstra(''SELECT gid as id, source::int, target::int, ' || mycost || '::float AS cost, ' || myrcost || ' FROM '|| quote_ident(tbl);
-	sql1 := ''', '|| source || ', ' || target || ' , '|| car ||', '|| car ||'), '|| quote_ident(tbl) || ' WHERE id2 = gid AND the_geom IS NOT NULL ORDER BY seq';
+		|| 'pgr_dijkstra(''SELECT gid as id, source::int, target::int, '
+		|| mycost || '::float AS cost, '
+		|| myrcost || ' FROM '|| quote_ident(tbl);
+	sql1 := ''', '|| source || ', ' || target || ' , '|| car ||', '|| car ||'), '|| quote_ident(tbl) || ' WHERE id2 = gid'
+		|| ' AND length != 0 AND the_geom IS NOT NULL ORDER BY seq';
 	IF car = 'true' THEN
 		sql := sql0 || restricted || sql1;
 	ELSE
