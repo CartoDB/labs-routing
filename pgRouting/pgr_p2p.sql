@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION public.pgr_p2p(
 RETURNS SETOF record
     AS $function$
 DECLARE
-    sql0     text;====
+    sql0     text;
     sql1     text;
     mycost text;
     myrcost text;

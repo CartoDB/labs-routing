@@ -19,7 +19,7 @@ DECLARE
 BEGIN
     sql := 'WITH t2t AS ' || input_table || ' SELECT the_geom::text FROM t2t WHERE num_atm=''' || atm || '''';
     EXECUTE sql INTO g1;
-    sql := 'SELECT the_geom::text FROM "demo-admin".direcciones_popular WHERE num_atm=''' || patm || '''';
+    sql := 'SELECT the_geom::text FROM "demo-admin".direcciones_banca_march WHERE num_atm=''' || patm || '''';
     EXECUTE sql INTO g2;
     p1 := 'ST_X(''' || g1::text || '''), ST_Y(''' || g1::text || ''')';
     p2 := 'ST_X(''' || g2::text || '''), ST_Y(''' || g2::text || ''')';
@@ -41,7 +41,7 @@ DECLARE
 BEGIN
       EXECUTE 'WITH t2t as ' || input_table || ' SELECT the_geom::geography FROM t2t WHERE num_atm=''' || atm_id || '''' INTO geom;
       RETURN QUERY EXECUTE 'SELECT p.num_atm::text as PATM, ST_distance(''' || geom::text || ''',p.the_geom::geography)::integer as dist'
-    || ' FROM "demo-admin".direcciones_popular as p'
+    || ' FROM "demo-admin".direcciones_banca_march as p'
     || ' WHERE ST_distance(''' || geom::text || ''',p.the_geom::geography) > 0'
     || ' ORDER BY ST_distance(''' || geom::text || ''',p.the_geom::geography) ASC LIMIT 3';
 END;
@@ -113,7 +113,7 @@ DECLARE
     final text;
     msg text;
 BEGIN
-    input_table := '"demo-admin".direcciones_uso';
+    input_table := '"demo-admin".direcciones_uso_full';
     -- harcoded flags car = 'true', fastest = 'true'
     sql := 'SELECT * FROM ing_core(''''ing_tmp'''',''''true'''',''''true'''')';
     numberofcores := numberofcores - 2;
@@ -123,8 +123,9 @@ BEGIN
         || ' JOIN   pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)'
         || ' WHERE  i.indrelid =''' || input_table|| '''::regclass'
         || ' AND    i.indisprimary;' INTO prim;
-    EXECUTE 'CREATE TEMP TABLE ing_tmp AS SELECT * FROM ' || input_table;
-    EXECUTE 'ALTER TABLE ing_tmp  ADD PRIMARY KEY (' || prim || ')';
+    -- EXECUTE 'DROP TABLE IF EXISTS ing_tmp';
+    -- EXECUTE 'CREATE TABLE IF NOT EXISTS ing_tmp AS SELECT * FROM ' || input_table;
+    -- EXECUTE 'ALTER TABLE ing_tmp  ADD PRIMARY KEY (' || prim || ')';
     -- Parallelization query
     EXECUTE 'SELECT parsel('
         || '''ing_tmp'', '
@@ -133,7 +134,7 @@ BEGIN
         || '''' || output_table::text || ''', '
         || '''input_alias'', '
         || numberofcores::integer || ');' INTO final;
-    EXECUTE 'DROP TABLE ing_tmp';
+    -- EXECUTE 'DROP TABLE IF EXISTS ing_tmp';
     RETURN final;
 END;
 $BODY$
