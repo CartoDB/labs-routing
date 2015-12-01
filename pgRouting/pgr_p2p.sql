@@ -8,7 +8,7 @@
 -- -- x2, y2 [double],[double] lng, lat of final point (EPSG:4326)
 -- -- car [string] 'true' or 'false'. This flag modifies the routing method to take into account the direction of the ways and the eventual driving restrictions (walkways, steps, and so on)
 -- -- fastest [string] 'true' or 'false'. This flag changes the the strategy to find the optimal route from shortest to fastest. There is no use to set it to true when car is set to false.
--- -- OUTPUTs an array of recordsets
+-- OUTPUTs an array of recordsets
 -- -- sec [integer] Index of the segment within the whole route
 -- -- gid [integer] ID of the segment in [tbl]
 -- -- ame [string] Name of the segment if any (vg. street name)
