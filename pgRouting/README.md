@@ -69,6 +69,8 @@ sudo apt-get install osm2pgrouting
 cd /home/pgrouting/mydataset
 time osm2pgrouting -file "whatever-latest.osm" -conf "/usr/share/osm2pgrouting/mapconfig.xml" -dbname cartodb_user_..._db -user postgres -host localhost -prefixtables "routing_sp_" -clean
 ```
+It takes ~ 2h to upload the whole Spain's network (32cores, 60GB RAM)
+
 **NOTE:** Looks like the topology sanitization of OSM2pgRouting is not as good as expected. If you use your own function to cal pgr_dijkstra(), then add this to your query (like pgr_p2p.sql:59)
 
 ```sql
