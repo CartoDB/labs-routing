@@ -38,12 +38,17 @@ CREATE OR REPLACE FUNCTION ing_neighbors(
 $BODY$
 DECLARE
     geom geography;
+    red text;
 BEGIN
-      EXECUTE 'WITH t2t as ' || input_table || ' SELECT the_geom::geography FROM t2t WHERE num_atm=''' || atm_id || '''' INTO geom;
-      RETURN QUERY EXECUTE 'SELECT p.num_atm::text as PATM, ST_distance(''' || geom::text || ''',p.the_geom::geography)::integer as dist'
-    || ' FROM "demo-admin".direcciones_banca_march as p'
-    || ' WHERE ST_distance(''' || geom::text || ''',p.the_geom::geography) > 0'
-    || ' ORDER BY ST_distance(''' || geom::text || ''',p.the_geom::geography) ASC LIMIT 3';
+    red := '"demo-admin".direcciones_banca_march';
+    EXECUTE 'WITH t2t as ' || input_table || ' SELECT the_geom::geography FROM t2t WHERE num_atm=''' || atm_id || '''' INTO geom;
+    RETURN QUERY EXECUTE 'WITH distance as('
+    || 'SELECT p.num_atm::text as PATM, ST_distance(''' || geom::text || ''',p.the_geom::geography)::integer as dist'
+    || ' FROM ' || red || ' as p'
+    || ')'
+    || ' SELECT * FROM distance'
+    || ' WHERE dist > 0'
+    || ' ORDER BY dist ASC limit 3';
 END;
 $BODY$
 LANGUAGE plpgsql;
@@ -115,7 +120,7 @@ DECLARE
 BEGIN
     input_table := '"demo-admin".direcciones_uso_full';
     -- harcoded flags car = 'true', fastest = 'true'
-    sql := 'SELECT * FROM ing_core(''''ing_tmp'''',''''true'''',''''true'''')';
+    sql := 'SELECT * FROM ing_core(''''ing_tmp'''',''''false'''',''''false'''')';
     numberofcores := numberofcores - 2;
     EXECUTE 'CREATE TABLE IF NOT EXISTS ' || output_table || ' (id1 text, id2 text, dist integer, pgdist integer, t integer)';
     EXECUTE 'SELECT a.attname'
@@ -139,3 +144,10 @@ BEGIN
 END;
 $BODY$
 language 'plpgsql';
+
+
+EXECUTE 'SELECT gid, the_geom, name, cost, source, target, ST_Reverse(the_geom) AS flip_geom, ST_Length(ST_Transform(the_geom,3857)) AS mylength FROM pgr_dijkstra(''SELECT gid as id, source::int, target::int, (length/maxspeed_forward)::float AS cost, (reverse_cost/maxspeed_backward)::float AS reverse_cost FROM routing_sp_ways WHERE the_geom && ST_Expand((SELECT ST_Collect(the_geom) FROM routing_sp_ways_vertices_pgr WHERE id IN (384493, 109845)), 0.05) AND class_id NOT IN (114, 117, 118, 119, 120, 122)'', 384493, 109845 , true, true), routing_sp_ways WHERE id2 = gid AND length != 0 AND the_geom IS NOT NULL ORDER BY seq;';
+
+
+
+

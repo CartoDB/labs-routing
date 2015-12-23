@@ -43,53 +43,63 @@ DECLARE
     sql     text;
     restricted text;
     rec     record;
-    source  integer;
-    target  integer;
+    p1  integer;
+    p2  integer;
+    buff  double precision;
     point   integer;
+    tmp record;
 BEGIN
+    -- for limiting the scope of the node search, 0.009deg per km
+    buff := 0.05;
     -- Find source and target IDs
     EXECUTE 'SELECT id::integer FROM routing_sp_ways_vertices_pgr ORDER BY the_geom <-> ST_GeometryFromText(''POINT('
         || x1 || ' ' || y1 || ')'',4326) LIMIT 1' INTO rec;
-    source := rec.id;
+    p1 := rec.id;
     EXECUTE 'SELECT id::integer FROM routing_sp_ways_vertices_pgr ORDER BY the_geom <-> ST_GeometryFromText(''POINT('
         || x2 || ' ' || y2 || ')'',4326) LIMIT 1' INTO rec;
-    target := rec.id;
-    -- OSM restricted ways IDs
-    -- http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access-Restrictions
-    restricted := ' WHERE class_id NOT IN (114, 117, 118, 119, 120, 122)';
+    p2 := rec.id;
     seq := 0;
     -- Set the type of route
     IF fastest='true' THEN
+        RAISE NOTICE 'Fastest route';
         IF car = 'false' THEN
+            RAISE NOTICE 'Walking route';
             mycost := '(length/4)';
             myrcost := '(reverse_cost/4)::float AS reverse_cost';
         ELSE
+            RAISE NOTICE 'Pedestrian route';
             mycost := '(length/maxspeed_forward)';
             myrcost := '(reverse_cost/maxspeed_backward)::float AS reverse_cost';
         END IF;
         mylength := 'ST_Length(ST_Transform(the_geom,3857))';
     ELSE
+        RAISE NOTICE 'Shortest route';
         mycost := 'length';
         myrcost := 'reverse_cost';
         mylength := '(cost*1000)';
     END IF;
-    -- Core query
-    sql0 :=  'SELECT gid, the_geom, name, cost, source, target, ST_Reverse(the_geom) AS flip_geom, '
-        || mylength || ' AS mylength FROM '
-        || 'pgr_dijkstra(''SELECT gid as id, source::int, target::int, '
+    -- Dijkstra query
+    sql0 := 'SELECT gid as id, source, target, '
         || mycost || '::float AS cost, '
-        || myrcost || ' FROM '|| quote_ident(tbl);
-    sql1 := ''', '|| source || ', ' || target || ' , '|| car ||', '|| car ||'), '|| quote_ident(tbl) || ' WHERE id2 = gid'
-        -- Sanitize topology network
-        || ' AND length != 0 AND the_geom IS NOT NULL ORDER BY seq';
-    -- Apply driving restrictions if needed
+        || myrcost || ' FROM '|| quote_ident(tbl)
+         -- http://ghost.mixedbredie.net/improving-pgrouting-performance/ Expected improvement x3, up to x20
+        || ' WHERE the_geom && ST_Expand((SELECT ST_Collect(the_geom) FROM routing_sp_ways_vertices_pgr WHERE id IN ('|| p1 || ', ' || p2 || ')), ' || buff || ')';
     IF car = 'true' THEN
-        sql := sql0 || restricted || sql1;
+        -- OSM restricted ways IDs
+        -- http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access-Restrictions
+        restricted := ' AND class_id NOT IN (114, 117, 118, 119, 120, 122)';
+        sql1 := sql0 || restricted;
     ELSE
-        sql := sql0 || sql1;
+        sql1 := sql0;
     END IF;
+    -- Core query 0
+    sql :=  'SELECT gid, the_geom, name, cost, source, target, ST_Reverse(the_geom) AS flip_geom, '
+        || mylength || ' AS mylength FROM '
+        || 'pgr_dijkstra(' || quote_literal(sql1) || ', '|| p1 || ', ' || p2 || ' , '|| car ||', '|| car ||'), '|| quote_ident(tbl) || ' WHERE id2 = gid'
+        -- Sanitize topology network
+        || ' AND length != 0 AND the_geom IS NOT NULL ORDER BY seq;';
     -- first point
-    point := source;
+    point := p1;
     FOR rec IN EXECUTE sql
     LOOP
         IF ( point != rec.source ) THEN
@@ -99,9 +109,9 @@ BEGIN
             point := rec.target;
         END IF;
         -- Heading
-        EXECUTE 'SELECT degrees( ST_Azimuth(
-            ST_StartPoint(''' || rec.the_geom::text || '''),
-            ST_EndPoint(''' || rec.the_geom::text || ''') ) )'
+        EXECUTE 'SELECT degrees( ST_Azimuth('
+            || 'ST_StartPoint(''' || rec.the_geom::text || '''),'
+            || 'ST_EndPoint(''' || rec.the_geom::text || ''') ) )'
             INTO heading;
         seq     := seq + 1;
         gid     := rec.gid;
@@ -113,6 +123,7 @@ BEGIN
     END LOOP;
     RETURN;
     EXCEPTION WHEN OTHERS THEN
+        raise notice 'EXCEPTION: % %', SQLERRM, SQLSTATE;
         heading := 0;
         seq     := seq + 1;
         gid     := -1;
