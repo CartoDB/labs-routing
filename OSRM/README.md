@@ -22,6 +22,7 @@ Demo server: http://map.project-osrm.org/s
 ## Installation
 
 [Reference](https://github.com/Project-OSRM/osrm-backend/wiki/Building-OSRM)
+
 [Tutorial, Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-osrm-server-on-ubuntu-14-04)
 
 * You need to build OSRM from the sources
@@ -101,6 +102,7 @@ Generate precomputed data to find optimal routes within short time.
 ## Tweaking
 
 [Blog post](https://www.mapbox.com/blog/osrm-shared-memory/)
+
 [Reference](https://github.com/Project-OSRM/osrm-backend/wiki/Configuring-and-using-Shared-Memory)
 
 Let's load all the shared memory directly into RAM. Once you have set up the shared memory as stated in reference, you can load the data into shared memory:
