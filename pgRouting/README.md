@@ -104,7 +104,7 @@ Then, it returns an array of segments as recordset:
 
 Processing time vs route length in km (ms/km)
 
-![time-distance](http://i.imgur.com/sht1zwO.jpg?!)
+![time-distance](http://i.imgur.com/0dVsQpx.jp?!)
 
 The performance of this function compared to the standard one is related to the distance between the studied points. This chart represents the improvement ratio vs. distance in km.
 
