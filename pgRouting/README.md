@@ -110,7 +110,6 @@ The performance of this function compared to the standard one is related to the 
 
 ![improvement](http://i.imgur.com/6tW5GPe.jpg?1)
 
-The typical processing time
 
 ## Sample queries to find the optimal route between two points
 
