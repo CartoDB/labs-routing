@@ -144,10 +144,3 @@ BEGIN
 END;
 $BODY$
 language 'plpgsql';
-
-
-EXECUTE 'SELECT gid, the_geom, name, cost, source, target, ST_Reverse(the_geom) AS flip_geom, ST_Length(ST_Transform(the_geom,3857)) AS mylength FROM pgr_dijkstra(''SELECT gid as id, source::int, target::int, (length/maxspeed_forward)::float AS cost, (reverse_cost/maxspeed_backward)::float AS reverse_cost FROM routing_sp_ways WHERE the_geom && ST_Expand((SELECT ST_Collect(the_geom) FROM routing_sp_ways_vertices_pgr WHERE id IN (384493, 109845)), 0.05) AND class_id NOT IN (114, 117, 118, 119, 120, 122)'', 384493, 109845 , true, true), routing_sp_ways WHERE id2 = gid AND length != 0 AND the_geom IS NOT NULL ORDER BY seq;';
-
-
-
-

@@ -102,13 +102,23 @@ Then, it returns an array of segments as recordset:
 * **geom** [geometry] Linestring (EPSG:4326)
 * **length** [double] Length of the segment (meters)
 
+Processing time vs route length (ms/km)
+
+[time-distancee](http://i.imgur.com/sht1zwO.jpg)
+
+The performance of this function compared to the standard one is related to the distance between the studied points. This chart represents the improvement ratio vs. distance in meters.
+
+[improvement](http://i.imgur.com/6tW5GPe.jpg?1)
+
+The typical processing time
+
 ## Sample queries to find the optimal route between two points
 
 Pedestrian route as single Linestring and distance (Km) as attribute, ready for CartoDB
 
 ```sql
 WITH route AS (
-	SELECT ST_Transform(geom,3857) as the_geom, cost as distance FROM pgr_p2p('routing_sp_ways', -3.75,40.40, -3.70,40.40, 'false', 'false') ORDER BY seq
+    SELECT ST_Transform(geom,3857) as the_geom, cost as distance FROM pgr_p2p('routing_sp_ways', -3.75,40.40, -3.70,40.40, 'false', 'false') ORDER BY seq
 )
 SELECT ST_MakeLine(route.the_geom) as the_geom_webmercator, SUM(cost) FROM route;
 ```

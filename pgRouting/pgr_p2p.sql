@@ -67,7 +67,7 @@ BEGIN
             mycost := '(length/4)';
             myrcost := '(reverse_cost/4)::float AS reverse_cost';
         ELSE
-            RAISE NOTICE 'Pedestrian route';
+            RAISE NOTICE 'Driving route';
             mycost := '(length/maxspeed_forward)';
             myrcost := '(reverse_cost/maxspeed_backward)::float AS reverse_cost';
         END IF;
