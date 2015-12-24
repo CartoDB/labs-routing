@@ -102,11 +102,11 @@ Then, it returns an array of segments as recordset:
 * **geom** [geometry] Linestring (EPSG:4326)
 * **length** [double] Length of the segment (meters)
 
-Processing time vs route length (ms/km)
+Processing time vs route length in km (ms/km)
 
 ![time-distance](http://i.imgur.com/sht1zwO.jpg?!)
 
-The performance of this function compared to the standard one is related to the distance between the studied points. This chart represents the improvement ratio vs. distance in meters.
+The performance of this function compared to the standard one is related to the distance between the studied points. This chart represents the improvement ratio vs. distance in km.
 
 ![improvement](http://i.imgur.com/KHRIu1U.jpg)
 
