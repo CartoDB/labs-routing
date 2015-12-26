@@ -1,8 +1,8 @@
 -- --------------------------------------------------------------------------------------------------------------
 -- Nearest ING ATM in terms of routed distance or driving time
 CREATE OR REPLACE FUNCTION ing_pgrdist(
-    IN atm text,
-    IN patm text,
+    IN atm integer,
+    IN patm integer,
     IN input_table text,
     IN car text,
     IN fastest text
@@ -17,9 +17,9 @@ DECLARE
     p2 text;
     dist double precision;
 BEGIN
-    sql := 'WITH t2t AS ' || input_table || ' SELECT the_geom::text FROM t2t WHERE num_atm=''' || atm || '''';
+    sql := 'WITH t2t AS ' || input_table || ' SELECT the_geom::text FROM t2t WHERE id_dom=' || atm;
     EXECUTE sql INTO g1;
-    sql := 'SELECT the_geom::text FROM "demo-admin".direcciones_banca_march WHERE num_atm=''' || patm || '''';
+    sql := 'SELECT the_geom::text FROM atmgratis1 WHERE id_atm=' || patm ;
     EXECUTE sql INTO g2;
     p1 := 'ST_X(''' || g1::text || '''), ST_Y(''' || g1::text || ''')';
     p2 := 'ST_X(''' || g2::text || '''), ST_Y(''' || g2::text || ''')';
@@ -31,7 +31,7 @@ language 'plpgsql';
 -- --------------------------------------------------------------------------------------------------------------
 -- Finds the 3 (harcoded) nearest ATM in terms of linear distance
 CREATE OR REPLACE FUNCTION ing_neighbors(
-    IN atm_id text,
+    IN atm_id integer,
     IN input_table text
     )
   RETURNS TABLE(PATM text, dist integer)  AS
@@ -40,10 +40,10 @@ DECLARE
     geom geography;
     red text;
 BEGIN
-    red := '"demo-admin".direcciones_banca_march';
-    EXECUTE 'WITH t2t as ' || input_table || ' SELECT the_geom::geography FROM t2t WHERE num_atm=''' || atm_id || '''' INTO geom;
+    red := 'atmgratis1';
+    EXECUTE 'WITH t2t as ' || input_table || ' SELECT the_geom::geography FROM t2t WHERE id_dom=' || atm_id INTO geom;
     RETURN QUERY EXECUTE 'WITH distance as('
-    || 'SELECT p.num_atm::text as PATM, ST_distance(''' || geom::text || ''',p.the_geom::geography)::integer as dist'
+    || 'SELECT p.id_atm::text as PATM, ST_distance(''' || geom::text || ''', p.the_geom::geography)::integer as dist'
     || ' FROM ' || red || ' as p'
     || ')'
     || ' SELECT * FROM distance'
@@ -59,8 +59,8 @@ CREATE OR REPLACE FUNCTION ing_core(
     IN input_table text,
     IN car text,
     IN fastest text,
-    OUT id1 text,
-    OUT id2 text,
+    OUT id1 integer,
+    OUT id2 integer,
     OUT dist integer,
     OUT pgdist integer,
     OUT t integer
@@ -76,23 +76,24 @@ DECLARE
     sql2 text;
     sdist text;
 BEGIN
-    sql0 := 'WITH t2t as ' || input_table || ' SELECT num_atm, the_geom FROM t2t WHERE the_geom IS NOT NULL';
+    sql0 := 'WITH t2t as ' || input_table || ' SELECT id_dom, the_geom FROM t2t WHERE the_geom IS NOT NULL';
     FOR rec0 IN EXECUTE sql0
     LOOP
-        sql1 := 'SELECT * FROM ing_neighbors(''' || rec0.num_atm || ''',''' || input_table || ''')';
+        sql1 := 'SELECT * FROM ing_neighbors(''' || rec0.id_dom || ''',''' || input_table || ''')';
         FOR rec1 IN EXECUTE sql1
         LOOP
-            EXECUTE 'SELECT (scost*60) AS min, pgdist FROM ing_pgrdist('''
-                || rec0.num_atm || ''','''
-                || rec1.PATM || ''','''
+            EXECUTE 'SELECT (scost*60) AS min, pgdist FROM ing_pgrdist('
+                || rec0.id_dom || ','
+                || rec1.PATM || ','''
                 || input_table || ''','''
                 || car || ''','''
                 || fastest || ''')' INTO rec2;
-            id1 := rec0.num_atm::text;
-            id2 := rec1.PATM::text;
+            id1 := rec0.id_dom;
+            id2 := rec1.PATM;
             dist := rec1.dist::integer;
             pgdist := rec2.pgdist::integer;
             t := rec2.min::integer;
+            -- RAISE NOTICE '% -  %', id1, id2;
             RETURN NEXT;
         END LOOP;
         RETURN NEXT;
@@ -118,11 +119,11 @@ DECLARE
     final text;
     msg text;
 BEGIN
-    input_table := '"demo-admin".direcciones_uso_full';
+    input_table := 'domicilios1';
     -- harcoded flags car = 'true', fastest = 'true'
     sql := 'SELECT * FROM ing_core(''''ing_tmp'''',''''false'''',''''false'''')';
     numberofcores := numberofcores - 2;
-    EXECUTE 'CREATE TABLE IF NOT EXISTS ' || output_table || ' (id1 text, id2 text, dist integer, pgdist integer, t integer)';
+    -- EXECUTE 'CREATE TABLE IF NOT EXISTS ' || output_table || ' (id1 text, id2 text, dist integer, pgdist integer, t integer)';
     EXECUTE 'SELECT a.attname'
         || ' FROM   pg_index i'
         || ' JOIN   pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)'

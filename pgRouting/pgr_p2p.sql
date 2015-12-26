@@ -61,19 +61,19 @@ BEGIN
     seq := 0;
     -- Set the type of route
     IF fastest='true' THEN
-        RAISE NOTICE 'Fastest route';
+        -- RAISE NOTICE 'Fastest route';
         IF car = 'false' THEN
-            RAISE NOTICE 'Walking route';
+            -- RAISE NOTICE 'Walking route';
             mycost := '(length/4)';
             myrcost := '(reverse_cost/4)::float AS reverse_cost';
         ELSE
-            RAISE NOTICE 'Driving route';
+            -- RAISE NOTICE 'Driving route';
             mycost := '(length/maxspeed_forward)';
             myrcost := '(reverse_cost/maxspeed_backward)::float AS reverse_cost';
         END IF;
         mylength := 'ST_Length(ST_Transform(the_geom,3857))';
     ELSE
-        RAISE NOTICE 'Shortest route';
+        -- RAISE NOTICE 'Shortest route';
         mycost := 'length';
         myrcost := 'reverse_cost';
         mylength := '(cost*1000)';
