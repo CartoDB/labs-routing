@@ -104,11 +104,11 @@ Then, it returns an array of segments as recordset:
 
 Processing time vs route length in km (ms/km)
 
-![time-distance](http://i.imgur.com/sht1zwO.jpg?!)
+![time-distance](http://i.imgur.com/cqKSc1Z.jpg)
 
 The performance of this function compared to the standard one is related to the distance between the studied points. This chart represents the improvement ratio vs. distance in km.
 
-![improvement](http://i.imgur.com/KHRIu1U.jpg)
+![improvement](http://i.imgur.com/AvXoqoB.jpg)
 
 
 ## Sample queries to find the optimal route between two points
