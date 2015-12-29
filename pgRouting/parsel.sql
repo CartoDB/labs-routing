@@ -47,20 +47,20 @@ BEGIN
 --   sql := 'SELECT current_schema();';
 --   EXECUTE sql INTO schemaname;
 
-  --get calling database port (required for dblink when more than one version of Postgres installed)
+  -- get calling database port (required for dblink when more than one version of Postgres installed)
   sql := 'SELECT setting FROM pg_settings WHERE name = ''port'';';
   EXECUTE sql INTO portnum;
-
 
   ---------------------------------------------------------------------------
   -- TO DO: edit your user name and/or password and/or connect string here --
   ---------------------------------------------------------------------------
 
   username := 'postgres';
+  portnum := '6432';
 --  pword :=  '<a password>';
 
 --  connectstring := QUOTE_LITERAL('dbname=' || dbname || ' user=' || username || ' password=' || pword || ' port=' || portnum);
-  connectstring := QUOTE_LITERAL('dbname=' || dbname || ' user=' || username || ' port=' || portnum);
+ connectstring := QUOTE_LITERAL('dbname=' || dbname || ' user=' || username || ' port=' || portnum);
 --  connectstring := QUOTE_LITERAL('dbname=' || dbname || ' port=' || portnum);
 
   ------------------------------------------------------------------
@@ -164,6 +164,7 @@ BEGIN
     -- make a new db connection
     conn := 'conn_' || i;
     sql := 'SELECT dblink_connect(' || QUOTE_LITERAL(conn) || ',' || connectstring || ');';
+    -- raise notice '%', sql;
     EXECUTE sql;
 
     -- create a subquery string that will replace the table name in the original query
@@ -174,6 +175,7 @@ BEGIN
     EXECUTE sql INTO subquery;
 
     insert_query := 'INSERT INTO ' || output_table || ' ' || subquery || ';';
+    -- insert_query := 'CREATE TABLE ' || output_table || i || ' AS ' || subquery || ';';
     -- RAISE NOTICE 'Connection % : %', i, insert_query;
 
     -- send the query asynchronously using the dblink connection

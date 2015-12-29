@@ -2,8 +2,8 @@
 
 ## Test environment
 
-* AMI 1.0.8 & pgRouting 2.0
-* Test machine @ http://solutions.onpremise.local (demo-admin:test) 16 * 2.8GHz CPU, 30GB RAM
+* postgreSQL 9.4 + pgRouting 2.1
+* Test machine: 32 * 2.8GHz CPU, 60GB RAM
 
 ## References
 
@@ -16,7 +16,7 @@
 ```sh
 sudo add-apt-repository ppa:georepublic/pgrouting
 sudo apt-get update
-sudo apt-get install postgresql-9.3-pgrouting
+sudo apt-get install postgresql-9.4-pgrouting
 ```
 
 ## Download OSM dataset (optional)
@@ -51,7 +51,7 @@ CREATE EXTENSION pgrouting;
 
 ## Load dataset from OSM into user DB (optional)
 
-First of all, you will need to avoid timeouts:
+First of all, you may need to avoid timeouts:
 
 ```sh
 psql -U postgres
@@ -69,7 +69,7 @@ sudo apt-get install osm2pgrouting
 cd /home/pgrouting/mydataset
 time osm2pgrouting -file "whatever-latest.osm" -conf "/usr/share/osm2pgrouting/mapconfig.xml" -dbname cartodb_user_..._db -user postgres -host localhost -prefixtables "routing_sp_" -clean
 ```
-It takes ~ 2h to upload the whole Spain's network (32cores, 60GB RAM)
+It took ~ 2h for our testing bed to upload the whole Spain's network.
 
 **NOTE:** Looks like the topology sanitization of OSM2pgRouting is not as good as expected. If you use your own function to cal pgr_dijkstra(), then add this to your query (like pgr_p2p.sql:59)
 
@@ -130,17 +130,12 @@ SELECT sum(length) as distance, sum(cost) as duration FROM pgr_p2p('routing_sp_w
 
 ## Parallelizing queries
 
-Due to [this](https://wiki.postgresql.org/wiki/FAQ#How_does_PostgreSQL_use_CPU_resources.3F) a PostgreSQL query runs in a single CPU, no matter how many cores has your data blender machine. Our target was to saturate each core to be as fast as possible. Using [parsel](http://geeohspatial.blogspot.com.es/2013/12/a-simple-function-for-parallel-queries_18.html) (but [this fork](https://gist.github.com/minus34/53570f5f274c30bc44e3) instead) we have managed to lower the processing time from 100h to 45h in 1st try and 26h in 2nd try (ING testcase).
+Due to [this](https://wiki.postgresql.org/wiki/FAQ#How_does_PostgreSQL_use_CPU_resources.3F) a PostgreSQL query runs in a single CPU, no matter how many cores has your data blender machine. Our target was to saturate each core to be as fast as possible. Using:
 
-**parsel()** requires **dblink** extension.
+* [dblink](http://www.postgresql.org/docs/current/static/dblink.html) to enable connections to other DB from inside our procedure
+* [pgbouncer](https://pgbouncer.github.io/). With the parameter **query_wait_timeout** set to **0** to avoid timeouts in our connections
+* [parsel](http://geeohspatial.blogspot.com.es/2013/12/a-simple-function-for-parallel-queries_18.html) (but [this fork](https://gist.github.com/minus34/53570f5f274c30bc44e3) instead).
 
-```sql
-CREATE EXTENSION dblink;
-```
-
-Check **ing_launch()** function at **ING.sql** to check a sample use of this function.
-
-**NOTE:** [pmpp](https://github.com/moat/pmpp) extension will be tested againsta **parsel** in near future.
 
 ## So far
 * Looks like pgRouting doesn't break CartoDB

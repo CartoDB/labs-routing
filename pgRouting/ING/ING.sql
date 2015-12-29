@@ -59,11 +59,11 @@ CREATE OR REPLACE FUNCTION ing_core(
     IN input_table text,
     IN car text,
     IN fastest text,
-    OUT id1 integer,
-    OUT id2 integer,
-    OUT dist integer,
-    OUT pgdist integer,
-    OUT t integer
+    OUT id1 bigint,
+    OUT id2 bigint,
+    OUT dist bigint,
+    OUT pgdist bigint,
+    OUT t bigint
     )
   RETURNS SETOF record AS
 $BODY$
@@ -90,9 +90,9 @@ BEGIN
                 || fastest || ''')' INTO rec2;
             id1 := rec0.id_dom;
             id2 := rec1.PATM;
-            dist := rec1.dist::integer;
-            pgdist := rec2.pgdist::integer;
-            t := rec2.min::integer;
+            dist := rec1.dist::bigint;
+            pgdist := rec2.pgdist::bigint;
+            t := rec2.min::bigint;
             -- RAISE NOTICE '% -  %', id1, id2;
             RETURN NEXT;
         END LOOP;
